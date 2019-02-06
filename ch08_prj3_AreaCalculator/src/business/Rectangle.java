@@ -1,3 +1,4 @@
+package business;
 
 public class Rectangle extends Square {
 	private double length;

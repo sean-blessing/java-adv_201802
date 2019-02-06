@@ -1,3 +1,4 @@
+package business;
 
 public abstract class Shape {
 	
