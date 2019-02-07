@@ -1,0 +1,36 @@
+package business;
+
+public class WizardItem {
+	private int id;
+	private String name;
+	public static int nextId = 1;
+	
+	public WizardItem(String name) {
+		super();
+		id = nextId;
+		nextId++;
+		this.name = name;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	@Override
+	public String toString() {
+		return "WizardItem [id=" + id + ", name=" + name + "]";
+	}
+	
+}
