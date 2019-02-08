@@ -2,6 +2,7 @@ package db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -22,33 +23,46 @@ public class ProductDB implements DAO<Product> {
 	}
 	
 	@Override
-	public Product get(String code)  throws SQLException{
-		Connection conn = getConnection();
-		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("Select * from Product"
-				+ "	where code = '"+code+"'");
+	public Product get(String code) {
 		Product product = null;
-		while (rs.next()) {
-			product = getProductFromResultSet(rs);
+		String sql = "Select * from Product"
+				+ "	where code = ?";
+		try (Connection conn = getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql)){
+			stmt.setString(1, code);
+			ResultSet rs = stmt.executeQuery();
+			while (rs.next()) {
+				product = getProductFromResultSet(rs);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		rs.close();
 		return product;
 	}
 
 	@Override
-	public Product get(int id) throws SQLException {
-		Connection conn = getConnection();
-		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("Select * from Product	where id = "+id);
+	public Product get(int id) {
+		
 		Product product = null;
-		while (rs.next()) {
-			product = getProductFromResultSet(rs);
+		String sql = "Select * from Product	where id = ?";
+		try (Connection conn = getConnection();
+			 PreparedStatement stmt = conn.prepareStatement(sql)) {
+			stmt.setInt(1, id);
+			ResultSet rs = stmt.executeQuery();
+			while (rs.next()) {
+				product = getProductFromResultSet(rs);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		rs.close();
 		return product;
 	}
 
 	@Override
+	// NOTE:  Not using a PreparedStatement to retain an example of 
+	// using the Statement object
 	public List<Product> getAll() throws SQLException {
 		List<Product> products = new ArrayList<Product>();
 		Connection conn = getConnection();
@@ -71,41 +85,60 @@ public class ProductDB implements DAO<Product> {
 		return pdt;
 	}
 
-	@Override
-	public boolean add(Product pdt) throws SQLException {
-		boolean success = false;
-		String query = "insert into product (code, description, listprice)" + 
-				" values ('" + pdt.getCode() + "', '" + pdt.getDescription()
-				+ "', " + pdt.getPrice() + ")";
-		Statement stmt = getConnection().createStatement();
-		int rowCount = stmt.executeUpdate(query);
-		if (rowCount > 0)
-			success = true;
-		return success;
-	}
+    @Override
+    public boolean add(Product p) {
+    	boolean success = false;
+        String sql = "INSERT INTO Product (code, description, listprice) "
+                   + "VALUES (?, ?, ?)";
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, p.getCode());
+            ps.setString(2, p.getDescription());
+            ps.setDouble(3, p.getPrice());
+            int rowCount = ps.executeUpdate();
+            if (rowCount > 0)
+            	success = true;
+        } catch (SQLException e) {
+            System.err.println(e);
+        }
+        return success;
+    }
 
-	@Override
-	public boolean update(Product pdt) throws SQLException {
-		boolean success = false;
-		String query = "update product" + 
-				" set description =  '" + pdt.getDescription() + "'" + 
-				" where id = " + pdt.getId();
-		Statement stmt = getConnection().createStatement();
-		int rowCount = stmt.executeUpdate(query);
-		if (rowCount > 0)
-			success = true;
-		return success;
-	}
+    @Override
+    public boolean update(Product p) {
+    	boolean success = false;
+        String sql = "UPDATE Product SET "
+                   + "  Description = ? "
+                   + "WHERE Code = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, p.getDescription());
+            ps.setString(2, p.getCode());
+            int rowCount = ps.executeUpdate();
+            if (rowCount > 1)
+            	success = true;
+        } catch (SQLException e) {
+            System.err.println(e);
+        }
+        return success;
+    }
 
-	@Override
-	public boolean delete(Product pdt) throws SQLException {
+    @Override
+    public boolean delete(Product p) {
 		boolean success = false;
-		String query = "delete from product where id = " + pdt.getId();
-		Statement stmt = getConnection().createStatement();
-		int rowCount = stmt.executeUpdate(query);
-		if (rowCount > 0)
-			success = true;
-		return success;
-	}
+        String sql = "DELETE FROM Product "
+                   + "WHERE id = ?";
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, p.getId());
+            int rowCount = ps.executeUpdate();
+            if (rowCount>1)
+            	success = true;
+        } catch (SQLException e) {
+            System.err.println(e);
+        }
+        return success;
+    }
+
 
 }
